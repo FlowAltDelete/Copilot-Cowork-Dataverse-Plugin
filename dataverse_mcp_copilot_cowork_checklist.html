@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataverse MCP Connector for Copilot Cowork Checklist</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #111827;
+      --panel2: #0f172a;
+      --card: rgba(15, 23, 42, 0.88);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --line: rgba(148, 163, 184, 0.18);
+      --soft: rgba(148, 163, 184, 0.10);
+      --green: #36d399;
+      --blue: #38bdf8;
+      --purple: #a78bfa;
+      --yellow: #fbbf24;
+      --red: #fb7185;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 34rem),
+        radial-gradient(circle at top right, rgba(167, 139, 250, 0.14), transparent 34rem),
+        radial-gradient(circle at bottom left, rgba(54, 211, 153, 0.12), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    button, input, textarea, select { font: inherit; }
+
+    .shell {
+      width: min(1380px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 64px;
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 16px;
+      height: calc(100vh - 32px);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 16px;
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 15px;
+      background:
+        radial-gradient(circle at 42% 42%, #bbf7d0 0 18%, transparent 19%),
+        linear-gradient(135deg, #0f766e, #22c55e 46%, #38bdf8);
+      position: relative;
+      box-shadow: 0 12px 34px rgba(56, 189, 248, 0.18);
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+
+    .logo::after {
+      content: "Cowork";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 7px;
+      height: 14px;
+      display: grid;
+      place-items: center;
+      background: #000;
+      color: #fff;
+      font-size: 8px;
+      font-weight: 900;
+    }
+
+    .brand h1 {
+      font-size: 15px;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .progressBox {
+      background: rgba(2, 6, 23, 0.42);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 13px;
+      margin-bottom: 14px;
+    }
+
+    .progressTop {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 9px;
+    }
+
+    .progressTop strong { color: var(--text); }
+    .progress {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.16);
+      overflow: hidden;
+    }
+    .bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--blue), var(--purple));
+      transition: width 0.2s ease;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 11px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid transparent;
+    }
+
+    .nav a:hover {
+      background: var(--soft);
+      border-color: var(--line);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.13);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.done {
+      color: #dcfce7;
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.32);
+    }
+
+    .buttons {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.88);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.16s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, 0.55);
+      background: rgba(30, 41, 59, 0.95);
+    }
+
+    button.primary {
+      color: #03111d;
+      border: 0;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+    }
+
+    button.danger {
+      border-color: rgba(251, 113, 133, 0.35);
+      background: rgba(127, 29, 29, 0.34);
+    }
+
+    .privacy {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      background: rgba(56, 189, 248, 0.07);
+      color: #bae6fd;
+      font-size: 12px;
+    }
+
+    .hero {
+      padding: 30px;
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(17, 24, 39, 0.78));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(circle at 74% 22%, rgba(167, 139, 250, 0.18), transparent 22rem),
+        linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.10), transparent);
+      pointer-events: none;
+    }
+
+    .hero > * { position: relative; }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 64px);
+      line-height: 0.97;
+      letter-spacing: -0.055em;
+    }
+
+    .gradient {
+      color: transparent;
+      background: linear-gradient(90deg, #fff, #38bdf8, #a78bfa, #36d399);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    .hero p.lede {
+      max-width: 900px;
+      margin: 18px 0 0;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 24px;
+    }
+
+    .flowItem {
+      min-height: 118px;
+      padding: 13px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(2, 6, 23, 0.35);
+    }
+
+    .flowItem b {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .flowItem span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    section {
+      margin-top: 22px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .head {
+      padding: 21px 22px 15px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(2, 6, 23, 0.30);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .title {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .num {
+      width: 35px;
+      height: 35px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      color: #e0f2fe;
+      background: linear-gradient(135deg, rgba(54, 211, 153, 0.20), rgba(56, 189, 248, 0.18));
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+
+    .head h3 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -0.025em;
+    }
+
+    .head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 780px;
+    }
+
+    .body {
+      padding: 18px 22px 22px;
+    }
+
+    .grid2, .grid3 {
+      display: grid;
+      gap: 13px;
+    }
+
+    .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .field {
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      border-radius: 15px;
+      padding: 12px;
+      background: rgba(2, 6, 23, 0.30);
+      min-width: 0;
+    }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: #e2e8f0;
+      font-weight: 820;
+      font-size: 12px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    input[type="text"], input[type="password"], input[type="date"], select, textarea {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 11px;
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text);
+      padding: 10px 11px;
+      outline: none;
+      font-size: 13px;
+    }
+
+    textarea {
+      min-height: 128px;
+      resize: vertical;
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(56, 189, 248, 0.72);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+    }
+
+    .fieldRow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .copyBtn {
+      white-space: nowrap;
+      padding-inline: 10px;
+    }
+
+    .note {
+      margin: 14px 0;
+      padding: 14px 15px;
+      border-radius: 16px;
+      border: 1px solid rgba(251, 191, 36, 0.32);
+      background: rgba(251, 191, 36, 0.08);
+      color: #fde68a;
+      font-size: 13px;
+    }
+
+    .note.good {
+      border-color: rgba(54, 211, 153, 0.32);
+      background: rgba(54, 211, 153, 0.08);
+      color: #bbf7d0;
+    }
+
+    .note.info {
+      border-color: rgba(56, 189, 248, 0.32);
+      background: rgba(56, 189, 248, 0.08);
+      color: #bae6fd;
+    }
+
+    .checks {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      background: rgba(2, 6, 23, 0.25);
+      padding: 12px;
+    }
+
+    .check input {
+      width: 20px;
+      height: 20px;
+      margin-top: 1px;
+      accent-color: var(--green);
+    }
+
+    .check strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .check small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .check.done {
+      border-color: rgba(54, 211, 153, 0.26);
+      background: rgba(54, 211, 153, 0.07);
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+      gap: 14px;
+    }
+
+    .mini {
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, 0.30);
+      padding: 14px;
+    }
+
+    .mini h4 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .mini p, .mini li {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      padding: 14px;
+      border-radius: 14px;
+      background: #020617;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: #dbeafe;
+      font-size: 12px;
+      line-height: 1.5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      max-width: 420px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: #020617;
+      color: white;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: 0.18s ease;
+      z-index: 50;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hidden { display: none !important; }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: 0; height: auto; }
+      .nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow, .grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .split { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 20px, 1380px); }
+      .nav, .flow, .grid2, .grid3 { grid-template-columns: 1fr; }
+      .head { display: block; }
+      .head > .pill { margin-top: 12px; }
+      .fieldRow { grid-template-columns: 1fr; }
+      .hero { padding: 22px; }
+    }
+
+    @media print {
+      body { background: #fff; color: #000; }
+      .shell { display: block; width: 100%; padding: 0; }
+      .sidebar, .buttons, button, .toast { display: none !important; }
+      .hero, section, .field, .check, .mini {
+        background: #fff !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        border-color: #ddd !important;
+      }
+      .gradient { color: #000; background: none; }
+      input, textarea, select, pre {
+        background: #fff !important;
+        color: #000 !important;
+        border-color: #ccc !important;
+      }
+      .muted, .hint, small, .head p, .mini p, .mini li, .footer { color: #555 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Dataverse MCP Connector<br />for Copilot Cowork</h1>
+          <p>Local setup checklist</p>
+        </div>
+      </div>
+
+      <div class="progressBox">
+        <div class="progressTop">
+          <strong>Progress</strong>
+          <span id="progressText">0 / 0</span>
+        </div>
+        <div class="progress"><div class="bar" id="bar"></div></div>
+      </div>
+
+      <nav class="nav">
+        <a href="#appreg">1. App Registration <span class="pill" id="nav-appreg">0%</span></a>
+        <a href="#environment">2. Environment <span class="pill" id="nav-environment">0%</span></a>
+        <a href="#oauth">3. OAuth <span class="pill" id="nav-oauth">0%</span></a>
+        <a href="#plugin">4. Plugin <span class="pill" id="nav-plugin">0%</span></a>
+        <a href="#deploy">5. Deploy <span class="pill" id="nav-deploy">0%</span></a>
+        <a href="#schema">6. Schema Skill <span class="pill" id="nav-schema">0%</span></a>
+        <a href="#gotchas">Gotchas <span class="pill" id="nav-gotchas">0%</span></a>
+      </nav>
+
+      <div class="buttons">
+        <button class="primary" id="exportBtn">Export sanitized JSON</button>
+        <button id="importBtn">Import JSON</button>
+        <input class="hidden" type="file" id="importFile" accept="application/json" />
+        <button id="copySummaryBtn">Copy setup summary</button>
+        <button id="printBtn">Print / Save PDF</button>
+        <button class="danger" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="privacy">
+        <strong>Local-only.</strong> This page has no external scripts. Values stay in this browser unless you export them. Client secrets are excluded from sanitized export.
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <p class="eyebrow">Public worksheet</p>
+        <h2>Dataverse MCP<br /><span class="gradient">Cowork setup checklist</span></h2>
+        <p class="lede">
+          A local worksheet for tracking your own progress while setting up a Copilot Cowork plugin that connects to the Dataverse MCP endpoint. Fill in your values, check off each step, and export a sanitized copy when needed.
+        </p>
+
+        <div class="flow">
+          <div class="flowItem"><b>1. App Registration</b><span>Create the Entra app and capture the identity values.</span></div>
+          <div class="flowItem"><b>2. Environment</b><span>Enable/configure Dataverse MCP for the target environment.</span></div>
+          <div class="flowItem"><b>3. OAuth</b><span>Create the Developer Portal OAuth registration.</span></div>
+          <div class="flowItem"><b>4. Plugin</b><span>Package the Dataverse MCP connector for Cowork.</span></div>
+          <div class="flowItem"><b>5. Deploy</b><span>Upload, assign, activate, and test the plugin.</span></div>
+          <div class="flowItem"><b>6. Schema Skill</b><span>Give Cowork logical names and table context.</span></div>
+        </div>
+      </header>
+
+      <section id="appreg" data-section="appreg">
+        <div class="head">
+          <div class="title">
+            <span class="num">1</span>
+            <div>
+              <h3>App Registration</h3>
+              <p>Create the Entra app registration used by the Dataverse MCP connection and OAuth setup.</p>
+            </div>
+          </div>
+          <span class="pill">Entra</span>
+        </div>
+        <div class="body">
+          <div class="grid3">
+            <div class="field">
+              <label>Tenant ID <span class="hint">GUID</span></label>
+              <div class="fieldRow"><input type="text" data-key="tenantId" placeholder="00000000-0000-0000-0000-000000000000" /><button class="copyBtn" data-copy-key="tenantId">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Application / Client ID <span class="hint">GUID</span></label>
+              <div class="fieldRow"><input type="text" data-key="clientId" placeholder="00000000-0000-0000-0000-000000000000" /><button class="copyBtn" data-copy-key="clientId">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Client secret <span class="hint">hidden</span></label>
+              <div class="fieldRow"><input type="password" data-key="clientSecret" id="clientSecret" placeholder="Paste temporarily only" autocomplete="off" /><button id="toggleSecret">Show</button></div>
+            </div>
+            <div class="field">
+              <label>Secret expiry <span class="hint">track this</span></label>
+              <input type="date" data-key="secretExpiry" />
+            </div>
+            <div class="field">
+              <label>Redirect URI <span class="hint">if required</span></label>
+              <div class="fieldRow"><input type="text" data-key="redirectUri" value="https://teams.microsoft.com/api/platform/v1.0/oAuthRedirect" /><button class="copyBtn" data-copy-key="redirectUri">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>API permission <span class="hint">Dynamics CRM</span></label>
+              <input type="text" data-key="apiPermission" value="mcp.tools" />
+            </div>
+          </div>
+
+          <div class="checks">
+            <label class="check"><input type="checkbox" data-section-id="appreg" data-check="appreg-1" /><span><strong>Create the Entra app registration.</strong><small>Copy Tenant ID and Client ID while you are there.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="appreg" data-check="appreg-2" /><span><strong>Create a client secret.</strong><small>Store it somewhere safe. This worksheet is only temporary.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="appreg" data-check="appreg-3" /><span><strong>Add the Dynamics CRM permission needed for Dataverse MCP.</strong><small>Common setup point: Dynamics CRM → mcp.tools.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="appreg" data-check="appreg-4" /><span><strong>Grant consent if your tenant requires it.</strong><small>Do this before troubleshooting the plugin.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="appreg" data-check="appreg-5" /><span><strong>Add the redirect URI if your OAuth flow needs it.</strong><small>Use the Teams OAuth redirect URI above.</small></span></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="environment" data-section="environment">
+        <div class="head">
+          <div class="title">
+            <span class="num">2</span>
+            <div>
+              <h3>Power Platform environment config</h3>
+              <p>Configure the target environment so Dataverse MCP can be called by the app/client you registered.</p>
+            </div>
+          </div>
+          <span class="pill">PPAC</span>
+        </div>
+        <div class="body">
+          <div class="grid3">
+            <div class="field">
+              <label>Environment name <span class="hint">friendly</span></label>
+              <input type="text" data-key="environmentName" placeholder="Demo Environment" />
+            </div>
+            <div class="field">
+              <label>Dataverse Org URL <span class="hint">no trailing slash</span></label>
+              <div class="fieldRow"><input type="text" data-key="orgUrl" placeholder="https://yourorg.crm.dynamics.com" /><button class="copyBtn" data-copy-key="orgUrl">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>MCP Server URL <span class="hint">auto</span></label>
+              <div class="fieldRow"><input type="text" data-key="mcpUrl" placeholder="https://yourorg.crm.dynamics.com/api/mcp" /><button class="copyBtn" data-copy-key="mcpUrl">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Allowed MCP Client ID <span class="hint">same as Client ID</span></label>
+              <div class="fieldRow"><input type="text" data-key="allowedClientId" placeholder="Auto-fills from Client ID" /><button class="copyBtn" data-copy-key="allowedClientId">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Allowed client status <span class="hint">PPAC</span></label>
+              <select data-key="allowedClientStatus">
+                <option value="">Select status</option>
+                <option>Enabled</option>
+                <option>Created but disabled</option>
+                <option>Not created</option>
+                <option>Needs re-check</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Target user security role <span class="hint">Dataverse access</span></label>
+              <input type="text" data-key="securityRole" placeholder="Security role / team / access note" />
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>Gotcha:</strong> the allowed MCP client uses the Entra Application / Client ID. Do not paste the OAuth registration ID here.
+          </div>
+
+          <div class="checks">
+            <label class="check"><input type="checkbox" data-section-id="environment" data-check="env-1" /><span><strong>Confirm the target Power Platform environment.</strong><small>Use the same environment you plan to demo or test against.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="environment" data-check="env-2" /><span><strong>Confirm the Dataverse Org URL.</strong><small>The MCP URL should be the org URL plus /api/mcp.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="environment" data-check="env-3" /><span><strong>Enable or confirm Dataverse MCP for the environment.</strong><small>Do this before you chase plugin issues.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="environment" data-check="env-4" /><span><strong>Add the Entra Client ID as an allowed MCP client.</strong><small>Set it to enabled.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="environment" data-check="env-5" /><span><strong>Confirm the test user has Dataverse permissions.</strong><small>The connector should respect the user’s access.</small></span></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="oauth" data-section="oauth">
+        <div class="head">
+          <div class="title">
+            <span class="num">3</span>
+            <div>
+              <h3>OAuth registration using Developer Portal</h3>
+              <p>Create the OAuth client registration that Cowork uses through the plugin auth configuration.</p>
+            </div>
+          </div>
+          <span class="pill">referenceId</span>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div class="field">
+              <label>OAuth registration ID <span class="hint">manifest referenceId</span></label>
+              <div class="fieldRow"><input type="text" data-key="oauthRegistrationId" placeholder="Paste Developer Portal OAuth registration ID" /><button class="copyBtn" data-copy-key="oauthRegistrationId">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Scope <span class="hint">auto from Dataverse URL</span></label>
+              <div class="fieldRow"><input type="text" data-key="scope" placeholder="https://yourorg.crm.dynamics.com/.default offline_access" /><button class="copyBtn" data-copy-key="scope">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Authorization endpoint <span class="hint">auto from Tenant ID</span></label>
+              <div class="fieldRow"><input type="text" data-key="authorizationEndpoint" placeholder="https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/authorize" /><button class="copyBtn" data-copy-key="authorizationEndpoint">Copy</button></div>
+            </div>
+            <div class="field">
+              <label>Token endpoint <span class="hint">auto from Tenant ID</span></label>
+              <div class="fieldRow"><input type="text" data-key="tokenEndpoint" placeholder="https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token" /><button class="copyBtn" data-copy-key="tokenEndpoint">Copy</button></div>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>Gotcha:</strong> this OAuth registration ID is the value you use as the plugin connector referenceId. It is not the same thing as the Entra Application / Client ID.
+            <br /><br />
+            <strong>Scope format:</strong> this checklist auto-fills the scope as <code>DataverseOrgURL/.default offline_access</code>. Example: <code>https://kavoracrm.crm.dynamics.com/.default offline_access</code>.
+          </div>
+
+          <div class="checks">
+            <label class="check"><input type="checkbox" data-section-id="oauth" data-check="oauth-1" /><span><strong>Create the OAuth client registration in Developer Portal.</strong><small>Use the same app/client values from the Entra registration.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="oauth" data-check="oauth-2" /><span><strong>Enter the authorization and token endpoints.</strong><small>This worksheet auto-generates common tenant-specific endpoints from the Tenant ID.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="oauth" data-check="oauth-3" /><span><strong>Enter the correct scope.</strong><small>Leave this field editable because tenant/app setups may differ.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="oauth" data-check="oauth-4" /><span><strong>Copy the OAuth registration ID.</strong><small>You will paste it into the plugin manifest connector auth config.</small></span></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="plugin" data-section="plugin">
+        <div class="head">
+          <div class="title">
+            <span class="num">4</span>
+            <div>
+              <h3>Build the plugin</h3>
+              <p>Keep the plugin focused: package the Dataverse MCP connector and the minimum metadata Cowork needs.</p>
+            </div>
+          </div>
+          <span class="pill">connector package</span>
+        </div>
+        <div class="body">
+          <div class="split">
+            <div>
+              <div class="grid2">
+                <div class="field">
+                  <label>Connector display name <span class="hint">manifest</span></label>
+                  <input type="text" data-key="pluginName" placeholder="Dataverse Connector" />
+                </div>
+                <div class="field">
+                  <label>Connector description <span class="hint">manifest</span></label>
+                  <input type="text" data-key="pluginDescription" placeholder="Access Dataverse tables in this environment." />
+                </div>
+                <div class="field">
+                  <label>Manifest / app ID <span class="hint">GUID</span></label>
+                  <input type="text" data-key="manifestAppId" placeholder="00000000-0000-0000-0000-000000000000" />
+                </div>
+                <div class="field">
+                  <label>Connector ID <span class="hint">manifest</span></label>
+                  <input type="text" data-key="connectorId" placeholder="dataverse-mcp" />
+                </div>
+                <div class="field">
+                  <label>Package version <span class="hint">change on update</span></label>
+                  <input type="text" data-key="packageVersion" placeholder="1.0.0" />
+                </div>
+                <div class="field">
+                  <label>Authorization type <span class="hint">expected</span></label>
+                  <input type="text" data-key="authorizationType" value="OAuthPluginVault" />
+                </div>
+                <div class="field">
+                  <label>Connector referenceId <span class="hint">OAuth registration ID</span></label>
+                  <div class="fieldRow"><input type="text" data-key="connectorReferenceId" placeholder="Auto-fills from OAuth registration ID" /><button class="copyBtn" data-copy-key="connectorReferenceId">Copy</button></div>
+                </div>
+              </div>
+
+              <div class="note info">
+                <strong>Builder tip:</strong> use a custom helper skill or template to generate and validate the plugin package. Keep the plugin itself mostly focused on the Dataverse MCP connector so it stays reusable.
+              </div>
+
+              <div class="checks">
+                <label class="check"><input type="checkbox" data-section-id="plugin" data-check="plugin-1" /><span><strong>Create the plugin package structure.</strong><small>Manifest and icons should be at the correct package level.</small></span></label>
+                <label class="check"><input type="checkbox" data-section-id="plugin" data-check="plugin-2" /><span><strong>Add the remote Dataverse MCP connector.</strong><small>Point it to the MCP Server URL from Step 3.</small></span></label>
+                <label class="check"><input type="checkbox" data-section-id="plugin" data-check="plugin-3" /><span><strong>Use OAuthPluginVault for connector auth.</strong><small>Paste the Developer Portal OAuth registration ID as the referenceId.</small></span></label>
+                <label class="check"><input type="checkbox" data-section-id="plugin" data-check="plugin-4" /><span><strong>Keep secrets out of the package.</strong><small>No client secret in manifest files, skill files, screenshots, or GitHub.</small></span></label>
+                <label class="check"><input type="checkbox" data-section-id="plugin" data-check="plugin-5" /><span><strong>Add color and outline icons.</strong><small>Use simple app-safe icon files.</small></span></label>
+              </div>
+            </div>
+
+            <div class="mini">
+              <h4>Connector snippet sanity check</h4>
+              <p>This matches the agentConnectors structure for a remote MCP server: id, displayName, description, toolSource.remoteMcpServer, mcpServerUrl, and OAuthPluginVault referenceId.</p>
+              <pre id="manifestSnippet"></pre>
+              <div class="buttons">
+                <button id="copySnippetBtn">Copy snippet</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="deploy" data-section="deploy">
+        <div class="head">
+          <div class="title">
+            <span class="num">5</span>
+            <div>
+              <h3>Deploy the plugin</h3>
+              <p>Deploy to a test user/group first. Use fresh Cowork sessions after every package change.</p>
+            </div>
+          </div>
+          <span class="pill">admin deploy</span>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div class="field">
+              <label>Target test user/group <span class="hint">deployment scope</span></label>
+              <input type="text" data-key="deploymentTarget" placeholder="Test user or group" />
+            </div>
+            <div class="field">
+              <label>Deployment notes <span class="hint">what changed</span></label>
+              <input type="text" data-key="deploymentNotes" placeholder="Example: v1.0.1 changed referenceId" />
+            </div>
+          </div>
+
+          <div class="checks">
+            <label class="check"><input type="checkbox" data-section-id="deploy" data-check="deploy-1" /><span><strong>Validate the package before upload.</strong><small>Catch manifest and icon issues early.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="deploy" data-check="deploy-2" /><span><strong>Upload/deploy the plugin through the admin path.</strong><small>Deploy to a small test scope first.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="deploy" data-check="deploy-3" /><span><strong>Confirm the plugin appears in Copilot Cowork.</strong><small>Check the plugin/extension area from a fresh session.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="deploy" data-check="deploy-4" /><span><strong>Run a simple connection test first.</strong><small>Do not start with the full demo prompt.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="deploy" data-check="deploy-5" /><span><strong>Change the version before uploading updates.</strong><small>This prevents stale package confusion.</small></span></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="schema" data-section="schema">
+        <div class="head">
+          <div class="title">
+            <span class="num">6</span>
+            <div>
+              <h3>Build a schema-aware skill</h3>
+              <p>Give Cowork the logical names and table context you want it to use when querying Dataverse.</p>
+            </div>
+          </div>
+          <span class="pill">schema context</span>
+        </div>
+        <div class="body">
+          <div class="grid2">
+            <div class="field">
+              <label>Schema skill name <span class="hint">optional separate skill</span></label>
+              <input type="text" data-key="schemaSkillName" placeholder="dataverse-schema-helper" />
+            </div>
+            <div class="field">
+              <label>Primary use case <span class="hint">what Cowork should do</span></label>
+              <input type="text" data-key="schemaUseCase" placeholder="Query records, related data, and data-quality issues" />
+            </div>
+            <div class="field">
+              <label>Table logical names <span class="hint">one per line</span></label>
+              <textarea data-key="logicalNames" placeholder="account&#10;contact&#10;new_customtable"></textarea>
+            </div>
+            <div class="field">
+              <label>Schema notes <span class="hint">relationships + important columns</span></label>
+              <textarea data-key="schemaNotes" placeholder="Add table purpose, primary columns, lookup columns, status fields, and relationships Cowork should understand."></textarea>
+            </div>
+          </div>
+
+          <div class="note good">
+            <strong>Important design choice:</strong> the schema skill can be part of the plugin, but keeping it separate is usually easier. If the schema changes, or you want to add/remove tables, you can update the skill/context without republishing and redeploying the connector plugin every time.
+          </div>
+
+          <div class="checks">
+            <label class="check"><input type="checkbox" data-section-id="schema" data-check="schema-1" /><span><strong>List the table logical names Cowork should use.</strong><small>Do not make Cowork guess when you already know the exact logical names.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="schema" data-check="schema-2" /><span><strong>Add the key columns and lookup relationships.</strong><small>This helps Cowork traverse the model properly.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="schema" data-check="schema-3" /><span><strong>Add business rules and data-quality checks.</strong><small>Example: stale requests, mismatched owners, missing approvals, inactive records.</small></span></label>
+            <label class="check"><input type="checkbox" data-section-id="schema" data-check="schema-4" /><span><strong>Test with one known sample record.</strong><small>Pick a record that has related data so the test proves relationship traversal.</small></span></label>
+          </div>
+        </div>
+      </section>
+
+      <section id="gotchas" data-section="gotchas">
+        <div class="head">
+          <div class="title">
+            <span class="num">!</span>
+            <div>
+              <h3>Final gotchas</h3>
+              <p>Run through these before you spend an hour debugging the wrong thing.</p>
+            </div>
+          </div>
+          <span class="pill">pre-flight</span>
+        </div>
+        <div class="body">
+          <div class="split">
+            <div class="checks">
+              <label class="check"><input type="checkbox" data-section-id="gotchas" data-check="gotcha-1" /><span><strong>Do not mix up Client ID and OAuth registration ID.</strong><small>Client ID goes into Power Platform allowed MCP clients. OAuth registration ID goes into plugin referenceId.</small></span></label>
+              <label class="check"><input type="checkbox" data-section-id="gotchas" data-check="gotcha-2" /><span><strong>Make sure the MCP URL ends with /api/mcp.</strong><small>Small URL mistakes can look like auth problems.</small></span></label>
+              <label class="check"><input type="checkbox" data-section-id="gotchas" data-check="gotcha-3" /><span><strong>Confirm the user has Dataverse table permissions.</strong><small>The connector still depends on access.</small></span></label>
+              <label class="check"><input type="checkbox" data-section-id="gotchas" data-check="gotcha-4" /><span><strong>Start a fresh Cowork session after plugin changes.</strong><small>Do this before assuming the package failed.</small></span></label>
+              <label class="check"><input type="checkbox" data-section-id="gotchas" data-check="gotcha-5" /><span><strong>Remove IDs and secrets before sharing screenshots.</strong><small>Tenant ID, client ID, secret, OAuth registration ID, and environment URLs when needed.</small></span></label>
+            </div>
+
+            <div class="mini">
+              <h4>Setup summary</h4>
+              <p>Sanitized values only. Secret is never shown here.</p>
+              <pre id="summary"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p class="footer">Single-file local worksheet. Share safely, but never share secrets.</p>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">Copied</div>
+
+  <script>
+    const storageKey = "dataverse-mcp-cowork-high-level-v2";
+    const secretKey = "dataverse-mcp-cowork-high-level-secret-v2";
+
+    const defaultValues = {
+      redirectUri: "https://teams.microsoft.com/api/platform/v1.0/oAuthRedirect",
+      apiPermission: "mcp.tools",
+      authorizationType: "OAuthPluginVault"
+    };
+
+    const sections = ["appreg", "environment", "oauth", "plugin", "deploy", "schema", "gotchas"];
+
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+    function toast(message) {
+      const el = $("#toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove("show"), 1700);
+    }
+
+    function getValue(key) {
+      const el = $(`[data-key="${key}"]`);
+      if (!el) return "";
+      return el.type === "checkbox" ? el.checked : el.value;
+    }
+
+    function setValue(key, value) {
+      const el = $(`[data-key="${key}"]`);
+      if (!el) return;
+      if (el.type === "checkbox") el.checked = !!value;
+      else el.value = value || "";
+    }
+
+    function normalizeOrgUrl(value) {
+      return (value || "").trim().replace(/\/+$/, "");
+    }
+
+    function derived() {
+      const orgUrl = normalizeOrgUrl(getValue("orgUrl"));
+      if (orgUrl && orgUrl !== getValue("orgUrl")) setValue("orgUrl", orgUrl);
+
+      if (orgUrl && !getValue("mcpUrl")) setValue("mcpUrl", `${orgUrl}/api/mcp`);
+
+      const expectedScope = orgUrl ? `${orgUrl}/.default offline_access` : "";
+      const currentScope = getValue("scope");
+      if (expectedScope && (!currentScope || currentScope.includes("yourorg.crm.dynamics.com"))) {
+        setValue("scope", expectedScope);
+      }
+
+      const tenantId = (getValue("tenantId") || "").trim();
+      if (tenantId && !getValue("authorizationEndpoint")) {
+        setValue("authorizationEndpoint", `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`);
+      }
+      if (tenantId && !getValue("tokenEndpoint")) {
+        setValue("tokenEndpoint", `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`);
+      }
+
+      const clientId = getValue("clientId");
+      if (clientId && !getValue("allowedClientId")) setValue("allowedClientId", clientId);
+
+      const oauthId = getValue("oauthRegistrationId");
+      if (oauthId && !getValue("connectorReferenceId")) setValue("connectorReferenceId", oauthId);
+    }
+
+    function state(includeSecret = false) {
+      const values = {};
+      $$("[data-key]").forEach(el => {
+        if (el.dataset.key === "clientSecret" && !includeSecret) return;
+        values[el.dataset.key] = el.type === "checkbox" ? el.checked : el.value;
+      });
+
+      const checks = {};
+      $$("[data-check]").forEach(el => checks[el.dataset.check] = el.checked);
+
+      return {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        values,
+        checks
+      };
+    }
+
+    function save() {
+      localStorage.setItem(storageKey, JSON.stringify(state(false)));
+      if (getValue("clientSecret")) localStorage.setItem(secretKey, getValue("clientSecret"));
+      else localStorage.removeItem(secretKey);
+    }
+
+    function load() {
+      Object.entries(defaultValues).forEach(([k, v]) => setValue(k, v));
+
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        try {
+          const saved = JSON.parse(raw);
+          Object.entries(saved.values || {}).forEach(([k, v]) => setValue(k, v));
+          Object.entries(saved.checks || {}).forEach(([k, v]) => {
+            const el = $(`[data-check="${k}"]`);
+            if (el) el.checked = !!v;
+          });
+        } catch {}
+      }
+
+      const secret = localStorage.getItem(secretKey);
+      if (secret) setValue("clientSecret", secret);
+    }
+
+    function updateProgress() {
+      const all = $$("[data-check]");
+      const done = all.filter(x => x.checked).length;
+      const pct = all.length ? Math.round((done / all.length) * 100) : 0;
+      $("#progressText").textContent = `${done} / ${all.length} (${pct}%)`;
+      $("#bar").style.width = `${pct}%`;
+
+      sections.forEach(section => {
+        const checks = $$(`[data-section-id="${section}"]`);
+        const completed = checks.filter(x => x.checked).length;
+        const spct = checks.length ? Math.round((completed / checks.length) * 100) : 0;
+        const badge = $(`#nav-${section}`);
+        if (badge) {
+          badge.textContent = `${spct}%`;
+          badge.classList.toggle("done", spct === 100);
+        }
+      });
+
+      $$("[data-check]").forEach(el => {
+        const row = el.closest(".check");
+        if (row) row.classList.toggle("done", el.checked);
+      });
+    }
+
+    function snippet() {
+      const orgUrl = getValue("orgUrl") || "https://yourorg.crm.dynamics.com";
+      const cleanOrgUrl = orgUrl.replace(/\/+$/, "");
+      const connectorId = getValue("connectorId") || "dataverse-yourorg";
+      const displayName = getValue("pluginName") || "Dataverse Connector";
+      const description = getValue("pluginDescription") || `Access Dataverse tables in the ${cleanOrgUrl.replace("https://", "").split(".")[0]} environment.`;
+
+      const obj = {
+        agentConnectors: [
+          {
+            id: connectorId,
+            displayName: displayName,
+            description: description,
+            toolSource: {
+              remoteMcpServer: {
+                mcpServerUrl: getValue("mcpUrl") || `${cleanOrgUrl}/api/mcp`,
+                authorization: {
+                  type: getValue("authorizationType") || "OAuthPluginVault",
+                  referenceId: getValue("connectorReferenceId") || getValue("oauthRegistrationId") || "YOUR_OAUTH_REGISTRATION_ID"
+                }
+              }
+            }
+          }
+        ]
+      };
+      $("#manifestSnippet").textContent = JSON.stringify(obj, null, 2);
+    }
+
+    function summary() {
+      const lines = [
+        `Connector display name: ${getValue("pluginName") || "(not set)"}`,
+        `Connector description: ${getValue("pluginDescription") || "(not set)"}`,
+        `Manifest/App ID: ${getValue("manifestAppId") || "(not set)"}`,
+        `Package version: ${getValue("packageVersion") || "(not set)"}`,
+        `Tenant ID: ${getValue("tenantId") || "(not set)"}`,
+        `Client ID: ${getValue("clientId") || "(not set)"}`,
+        `Environment: ${getValue("environmentName") || "(not set)"}`,
+        `Org URL: ${getValue("orgUrl") || "(not set)"}`,
+        `MCP URL: ${getValue("mcpUrl") || "(not set)"}`,
+        `OAuth registration ID: ${getValue("oauthRegistrationId") || "(not set)"}`,
+        `OAuth scope: ${getValue("scope") || "(not set)"}`,
+        `Connector referenceId: ${getValue("connectorReferenceId") || "(not set)"}`,
+        `Schema skill: ${getValue("schemaSkillName") || "(not set)"}`,
+        `Client secret captured here: ${getValue("clientSecret") ? "Yes, hidden" : "No"}`
+      ];
+      $("#summary").textContent = lines.join("\n");
+    }
+
+    function update() {
+      derived();
+      updateProgress();
+      snippet();
+      summary();
+      save();
+    }
+
+    async function copy(text) {
+      try {
+        await navigator.clipboard.writeText(text || "");
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text || "";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+      toast("Copied");
+    }
+
+    function download(name, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      a.remove();
+    }
+
+    function bind() {
+      document.addEventListener("input", e => {
+        if (e.target.matches("[data-key]")) update();
+      });
+
+      document.addEventListener("change", e => {
+        if (e.target.matches("[data-key], [data-check]")) update();
+      });
+
+      document.addEventListener("click", e => {
+        const copyKey = e.target.closest("[data-copy-key]");
+        if (copyKey) {
+          e.preventDefault();
+          copy(getValue(copyKey.dataset.copyKey));
+        }
+      });
+
+      $("#toggleSecret").addEventListener("click", e => {
+        e.preventDefault();
+        const field = $("#clientSecret");
+        const visible = field.type === "text";
+        field.type = visible ? "password" : "text";
+        e.target.textContent = visible ? "Show" : "Hide";
+      });
+
+      $("#copySnippetBtn").addEventListener("click", () => copy($("#manifestSnippet").textContent));
+      $("#copySummaryBtn").addEventListener("click", () => copy($("#summary").textContent));
+      $("#printBtn").addEventListener("click", () => window.print());
+
+      $("#exportBtn").addEventListener("click", () => {
+        const sanitized = confirm("Export sanitized JSON without client secret? Click OK to exclude the secret. Click Cancel to include it.");
+        download(
+          sanitized ? "dataverse-mcp-cowork-checklist-sanitized.json" : "dataverse-mcp-cowork-checklist-with-secret.json",
+          JSON.stringify(state(!sanitized), null, 2),
+          "application/json"
+        );
+      });
+
+      $("#importBtn").addEventListener("click", () => $("#importFile").click());
+      $("#importFile").addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const imported = JSON.parse(reader.result);
+            Object.entries(imported.values || {}).forEach(([k, v]) => setValue(k, v));
+            Object.entries(imported.checks || {}).forEach(([k, v]) => {
+              const el = $(`[data-check="${k}"]`);
+              if (el) el.checked = !!v;
+            });
+            update();
+            toast("Imported");
+          } catch {
+            toast("Import failed");
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+      });
+
+      $("#resetBtn").addEventListener("click", () => {
+        if (!confirm("Reset all values and checks?")) return;
+        localStorage.removeItem(storageKey);
+        localStorage.removeItem(secretKey);
+        $$("[data-key]").forEach(el => {
+          if (el.type === "checkbox") el.checked = false;
+          else el.value = "";
+        });
+        $$("[data-check]").forEach(el => el.checked = false);
+        Object.entries(defaultValues).forEach(([k, v]) => setValue(k, v));
+        update();
+        toast("Reset complete");
+      });
+    }
+
+    load();
+    bind();
+    update();
+  </script>
+</body>
+</html>
